@@ -27,17 +27,68 @@
 (def login-tmpl (html-resource "templates/index.html"))
 (def snips-tmpl (html-resource "templates/snippets.html"))
 
+;; HTML elements
+(def a '({:tag :a :attrs nil :content nil}))
+(def script '({:tag :script :attrs nil :content nil}))
+(def link '({:tag :link :attrs nil :content nil}))
+
+;; table defs
+;; t = table, r = row, c = column
 (def r '({:tag :tr, :attrs nil, :content nil}))
 (def c '({:tag :td, :attrs nil, :content nil}))
-(def rc '({:tag :tr, :attrs nil, :content ({:tag :td, :attrs nil, :content nil})}))
-(def t '({:tag :table :attrs nil :content nil}))
+(def rc (transform r [:tr] (content c)))
+(def t '({:tag :table :attrs nil :content 
+          ({:tag :tr, :attrs nil, :content 
+            ({:tag :td, :attrs nil, :content nil})})}))
+
+;; divs
+(def div '({:tag :div :attrs nil :content nil}))
+(def div-r '({:tag :div :attrs {:class "row"} :content nil}))
+(def div-c '({:tag :div :attrs {:class "span6"} :content nil}))
+(defn div-c [width & attrs] 
+  (let [spn (str "span" width)]
+    (list {:tag :div :attrs {:class spn} :content nil})))
+(def div-body (transform div [:div] (set-attr :id "body")))
+
+;; bootstrap 
+(def div-container (transform div [:div] (set-attr :class "container-fluid" :id "container")))
+(def div-navbar (transform div [:div] (set-attr :id "nav" :class "navbar navbar-inverse")))
+(def div-navbar-inner (at div [:div] 
+                          (set-attr :class "navbar-inner")
+                          [:div]
+                          (content (at a [:a] (set-attr :class "brand" :href "#")
+                                         [:a] (content "Flog"))
+                                   (at a [:a] (set-attr :class "btn btn-inverse pull-right" :href "/main")
+                                         [:a] (content "Sign in")))))
+
+(def link-boot (transform link [:link] 
+                          (set-attr :href "bootstrap/css/bootstrap.min.css" 
+                                    :rel "stylesheet" 
+                                    :media "screen")))
+
+(def script-jquery (transform script [:script] (set-attr :src "http://code.jquery.com/jquery.js")))
+(def script-boot (transform script [:script] (set-attr :src "bootstrap/js/bootstrap.min.js")))
+(def posts (div-c 12))
+
 ;; ======================
 ;; page renderers
 ;; ======================
-(defn index [acctid]
+(defn index []
   (emit* 
     (at index-tmpl
-        [:something])))
+        [:head]
+        (append link-boot) 
+
+        [:body]
+        (append (at div-container 
+                    [:div#container] 
+                    (append (transform div-navbar [:div] 
+                                       (content div-navbar-inner)))
+                    [:div#container] 
+                    (append script-jquery script-boot)
+
+                    [:div#container] 
+                    )))))
 
 (defn admin [acctid]
   (emit* 
@@ -60,7 +111,7 @@
   ;; ======================
   ;; unauthenticated routes
   ;; ======================
-  (GET "/" [] (apply str (emit* index-tmpl)))
+  (GET "/" [] (apply str (index)))
   (GET "/login" [] (apply str (emit* login-tmpl)))
   (route/files "")
   (route/not-found "404 baby"))
