@@ -123,4 +123,3 @@
 
 (defn flog [routedef]
   (run-jetty routedef {:port 8080}))
-
