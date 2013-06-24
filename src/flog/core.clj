@@ -28,38 +28,72 @@
 (def snips-tmpl (html-resource "templates/snippets.html"))
 
 ;; HTML elements
-(def a '({:tag :a :attrs nil :content nil}))
-(def script '({:tag :script :attrs nil :content nil}))
-(def link '({:tag :link :attrs nil :content nil}))
+(defn create-tag [tag]
+  (list {:tag (keyword tag) :attrs nil :content nil}))  
+
+(def a (create-tag "a"))
+(def ul (create-tag "ul"))
+(def li (create-tag "li"))
+(def script (create-tag "script"))
+(def link (create-tag "link"))
+(def form (create-tag "form"))
+(def label (create-tag "label"))
+(def input (create-tag "input"))
 
 ;; table defs
 ;; t = table, r = row, c = column
-(def r '({:tag :tr, :attrs nil, :content nil}))
-(def c '({:tag :td, :attrs nil, :content nil}))
-(def rc (transform r [:tr] (content c)))
-(def t '({:tag :table :attrs nil :content 
-          ({:tag :tr, :attrs nil, :content 
-            ({:tag :td, :attrs nil, :content nil})})}))
+(def tr (create-tag "tr"))
+(def td (create-tag "td"))
+(def row-col (transform tr [:tr] (content td)))
+(def table (transform (create-tag "table") [:table] (content row-col))) 
 
 ;; divs
-(def div '({:tag :div :attrs nil :content nil}))
+(def div (create-tag "div"))
 (def div-r '({:tag :div :attrs {:class "row"} :content nil}))
 (def div-c '({:tag :div :attrs {:class "span6"} :content nil}))
-(defn div-c [width & attrs] 
-  (let [spn (str "span" width)]
-    (list {:tag :div :attrs {:class spn} :content nil})))
+
+(defn div 
+  ([attrs cont]
+        (transform (div attrs) [:div] (content cont)))
+  ([attrs]
+   (if (empty? attrs) (div)
+    (let [pair (first attrs)
+          k (first pair)
+          v (second pair)] 
+        (transform (div (rest attrs)) [:div] (set-attr k v)))))
+  ([] div (create-tag "div")))
+
 (def div-body (transform div [:div] (set-attr :id "body")))
 
 ;; bootstrap 
 (def div-container (transform div [:div] (set-attr :class "container-fluid" :id "container")))
+
+(defn li-menu [menu]
+  (at li [:li] (content (at a [:a] (set-attr :href (str "/" menu)) [:a] (content (str menu))))))
+
+(def menu-items '("blog","tasks","lessons","resume","code-notes","projects","contact"))
+
+(def menu-list (at ul 
+                 [:ul] 
+                 (clone-for [i menu-items] (content (li-menu i)))
+                 [:ul]
+                 (set-attr :class "nav")))
+
+(def brand-link (at a [:a] (set-attr :class "brand" :href "#")
+                      [:a] (content "Flog")))
+
+(def login-button (at a [:a] (set-attr :class "btn btn-inverse pull-right" :href "/private")
+                          [:a] (content "Login")))
+
 (def div-navbar (transform div [:div] (set-attr :id "nav" :class "navbar navbar-inverse")))
-(def div-navbar-inner (at div [:div] 
+(def div-navbar-inner (at div 
+                          [:div] 
                           (set-attr :class "navbar-inner")
+
                           [:div]
-                          (content (at a [:a] (set-attr :class "brand" :href "#")
-                                         [:a] (content "Flog"))
-                                   (at a [:a] (set-attr :class "btn btn-inverse pull-right" :href "/main")
-                                         [:a] (content "Sign in")))))
+                          (content brand-link menu-list login-button)))
+
+(def menu  (transform div-navbar [:div] (content div-navbar-inner)))
 
 (def link-boot (transform link [:link] 
                           (set-attr :href "bootstrap/css/bootstrap.min.css" 
@@ -68,7 +102,17 @@
 
 (def script-jquery (transform script [:script] (set-attr :src "http://code.jquery.com/jquery.js")))
 (def script-boot (transform script [:script] (set-attr :src "bootstrap/js/bootstrap.min.js")))
-(def posts (div-c 12))
+
+(def login-form (at form [:form] (set-attr :class "form-horizontal")
+                         [:form] (append (at (div {:class "control-group"}) 
+                                              [:div] 
+                                              (append (at label [:label] (set-attr :class "control-label" :for "user")
+                                                                [:label] (content "Name")))
+                                              [:div]
+                                              (append (at (div {:class "controls"}) 
+                                                          [:div]
+                                                          ;; ))))))
+                                                          (append (at input [:input] (set-attr :id "username" :type "text" :placeholder "username")))))))))
 
 ;; ======================
 ;; page renderers
@@ -82,12 +126,14 @@
         [:body]
         (append (at div-container 
                     [:div#container] 
-                    (append (transform div-navbar [:div] 
-                                       (content div-navbar-inner)))
-                    [:div#container] 
-                    (append script-jquery script-boot)
+                    (append menu)
+
+                   ;; [:div#container] 
+                   ;; (append (transform posts [:div] (set-attr :id "posts")))
 
                     [:div#container] 
+                    (append script-jquery script-boot)
+                    
                     )))))
 
 (defn admin [acctid]
@@ -99,15 +145,14 @@
   ;; ======================
   ;; authenticated routes
   ;; ======================
-  (context "/admin" request
+  (context "/private" request
            (friend/wrap-authorize
              (routes
-               (GET "/" [] (let [acctid (name ((keyword
-                                                 (str (:identity (friend/current-authentication))))
-                                                 @user-map))]
+               (GET "/" [] (let [acctid (name ((keyword (str (:identity (friend/current-authentication)))) @user-map))]
                              (apply str (index acctid))))
                (friend/logout (ANY "/logout" request (ring.util.response/redirect "/")))
                )#{::user}))
+
   ;; ======================
   ;; unauthenticated routes
   ;; ======================
