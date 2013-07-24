@@ -20,126 +20,87 @@
 
 (defn lookup [usr] (spit "users.out" @users) (@users usr))
 
-;; ======================
-;; templates for enlive
-;; ======================
-(def index-tmpl (html-resource "templates/index.html"))
-(def login-tmpl (html-resource "templates/index.html"))
-(def snips-tmpl (html-resource "templates/snippets.html"))
+(defn tag [& {:keys [tag attrs content]
+              :or {tag "div" attrs nil content nil}}] 
+                {:tag (keyword tag) :attrs attrs :content (if (list? content) content (list content))})
 
-;; HTML elements
-(defn create-tag [tag]
-  (list {:tag (keyword tag) :attrs nil :content nil}))  
+(def div-container 
+  (tag :attrs {:class "container-fluid" :id "container"}))
 
-(def a (create-tag "a"))
-(def ul (create-tag "ul"))
-(def li (create-tag "li"))
-(def script (create-tag "script"))
-(def link (create-tag "link"))
-(def form (create-tag "form"))
-(def label (create-tag "label"))
-(def input (create-tag "input"))
-
-;; table defs
-;; t = table, r = row, c = column
-(def tr (create-tag "tr"))
-(def td (create-tag "td"))
-(def row-col (transform tr [:tr] (content td)))
-(def table (transform (create-tag "table") [:table] (content row-col))) 
-
-;; divs
-(def div (create-tag "div"))
-(def div-r '({:tag :div :attrs {:class "row"} :content nil}))
-(def div-c '({:tag :div :attrs {:class "span6"} :content nil}))
-
-(defn div 
-  ([attrs cont]
-        (transform (div attrs) [:div] (content cont)))
-  ([attrs]
-   (if (empty? attrs) (div)
-    (let [pair (first attrs)
-          k (first pair)
-          v (second pair)] 
-        (transform (div (rest attrs)) [:div] (set-attr k v)))))
-  ([] div (create-tag "div")))
-
-(def div-body (transform div [:div] (set-attr :id "body")))
-
-;; bootstrap 
-(def div-container (transform div [:div] (set-attr :class "container-fluid" :id "container")))
-
-(defn li-menu [menu]
-  (at li [:li] (content (at a [:a] (set-attr :href (str "/" menu)) [:a] (content (str menu))))))
-
+;; NAVBAR ELEMENTS 
 (def menu-items '("blog","tasks","lessons","resume","code-notes","projects","contact"))
 
-(def menu-list (at ul 
-                 [:ul] 
-                 (clone-for [i menu-items] (content (li-menu i)))
-                 [:ul]
-                 (set-attr :class "nav")))
+(defn li-menu [menu]
+   (tag :tag "li" 
+        :content (tag :tag "a" 
+                      :attrs {:href (str "/" menu)} 
+                      :content (str menu))))
 
-(def brand-link (at a [:a] (set-attr :class "brand" :href "#")
-                      [:a] (content "Flog")))
+(defn menu-list [] (map #(list %) menu-items))
 
-(def login-button (at a [:a] (set-attr :class "btn btn-inverse pull-right" :href "/private")
-                          [:a] (content "Login")))
+(def brand (tag :tag "a" 
+                :attrs {:class "brand" :href "#"} 
+                :content "Flog"))
 
-(def div-navbar (transform div [:div] (set-attr :id "nav" :class "navbar navbar-inverse")))
-(def div-navbar-inner (at div 
-                          [:div] 
-                          (set-attr :class "navbar-inner")
+(def login-button (tag :tag "a" 
+                       :attrs {:class "btn btn-inverse pull-right" :href "/private"}
+                       :content "Login"))
 
-                          [:div]
-                          (content brand-link menu-list login-button)))
+;; NAVBAR ASSEMBLY 
+(def navbar 
+  (->>  (list brand (doall (menu-list)) login-button)
+        (tag :attrs {:class "navbar-inner"} :content )
+        (tag :attrs {:id "nav" :class "navbar navbar-inverse"} :content )
+    ))
 
-(def menu  (transform div-navbar [:div] (content div-navbar-inner)))
 
-(def link-boot (transform link [:link] 
-                          (set-attr :href "bootstrap/css/bootstrap.min.css" 
-                                    :rel "stylesheet" 
-                                    :media "screen")))
+;; HEAD ELEMENTS
+(def link-bootstrap (tag :tag "link" 
+                         :attrs {:href "bootstrap/css/bootstrap.min.css" 
+                                 :rel "stylesheet" 
+                                 :media "screen"}))
 
-(def script-jquery (transform script [:script] (set-attr :src "http://code.jquery.com/jquery.js")))
-(def script-boot (transform script [:script] (set-attr :src "bootstrap/js/bootstrap.min.js")))
+(def script-jquery (tag :tag "script" 
+                        :attrs {:src "http://code.jquery.com/jquery.js"}))
 
-(def login-form (at form [:form] (set-attr :class "form-horizontal")
-                         [:form] (append (at (div {:class "control-group"}) 
-                                              [:div] 
-                                              (append (at label [:label] (set-attr :class "control-label" :for "user")
-                                                                [:label] (content "Name")))
-                                              [:div]
-                                              (append (at (div {:class "controls"}) 
-                                                          [:div]
-                                                          ;; ))))))
-                                                          (append (at input [:input] (set-attr :id "username" :type "text" :placeholder "username")))))))))
+(def script-bootstrap (tag :tag "script" 
+                           :attrs {:src "bootstrap/js/bootstrap.min.js"}))
+
+;; (def login-form (at form [:form] (set-attr :class "form-horizontal")
+;;                          [:form] (append (at (div {:class "control-group"}) 
+;;                                               [:div] 
+;;                                               (append (at label [:label] (set-attr :class "control-label" :for "user")
+;;                                                                 [:label] (content "Name")))
+;;                                               [:div]
+;;                                               (append (at (div {:class "controls"}) 
+;;                                                           [:div]
+;;                                                           ;; ))))))
+;;                                                           (append (at input [:input] (set-attr :id "username" :type "text" :placeholder "username")))))))))
+;;
+
+;; HEAD ASSEMBLY
+(def head 
+  (->> (list link-bootstrap script-jquery script-bootstrap)
+       (tag :tag "head" :content )))
+
+;; BODY ASSEMBLY
+(def body 
+  (->> navbar
+       (tag :tag "body" :content )))
+
+;; HTML ASSEMBLY
+(def landing 
+  (->> (list head body)
+       (tag :tag "html"
+            :attrs {:lang "en"}
+            :content )))
 
 ;; ======================
-;; page renderers
+;; page render
 ;; ======================
+
 (defn index []
-  (emit* 
-    (at index-tmpl
-        [:head]
-        (append link-boot) 
-
-        [:body]
-        (append (at div-container 
-                    [:div#container] 
-                    (append menu)
-
-                   ;; [:div#container] 
-                   ;; (append (transform posts [:div] (set-attr :id "posts")))
-
-                    [:div#container] 
-                    (append script-jquery script-boot)
-                    
-                    )))))
-
-(defn admin [acctid]
-  (emit* 
-    (at index-tmpl
-        [:something])))
+  (apply str (emit* landing)))
 
 (defroutes main-routes
   ;; ======================
@@ -156,8 +117,8 @@
   ;; ======================
   ;; unauthenticated routes
   ;; ======================
-  (GET "/" [] (apply str (index)))
-  (GET "/login" [] (apply str (emit* login-tmpl)))
+  (GET "/" [] (index))
+;;   (GET "/login" [] (apply str (emit* login-tmpl)))
   (route/files "")
   (route/not-found "404 baby"))
 
@@ -165,6 +126,5 @@
            (friend/authenticate main-routes
                                 {:credential-fn (partial creds/bcrypt-credential-fn lookup)
                                  :workflows [(workflows/interactive-form)]})))
-
 (defn flog [routedef]
   (run-jetty routedef {:port 8080}))
