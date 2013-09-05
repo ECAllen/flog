@@ -1,0 +1,17 @@
+<form action="/private/add-blog-post" method="post" class="form-horizontal">
+	<div class="control-group">
+		<label class="control-label" for="inputMarkdown">Markdown: </label>
+		<div class="controls">
+			<textarea name="md" rows="20" class="span10" placeholder="Insert markdown here..."></textarea>
+		</div>
+	</div>
+	<div class="control-group">
+		<label class="control-label" for="appendedInputButton">Title: </label>
+		<div class="controls">
+			<div class="input-append">
+				<input name="title" class="span8" id="appendedInputButton" type="text" placeholder="Blog Entry Title"></input>
+				<button class="btn btn-primary" type="submit">Commit</button>
+			</div>
+		</div>
+	</div>
+</form>

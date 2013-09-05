@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<!-- Bootstrap -->
+		<link href="http://localhost:3000/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+		<style type="text/css">
+			body { padding-top: 65px; }
+		</style>
+	</head>
+	<body>
+		<div class="navbar navbar-inverse navbar-fixed-top">
+			<div class="navbar-inner">
+				<!-- <a class="brand" href="#">Flog</a> -->
+				<ul class="nav">
+					<li><a href="/blog"><i class="icon-book icon-white"></i> blog</a></li>
+					<!--	<li><a href="/tasks">tasks</a></li>
+					<li><a href="/lessons">lessons</a></li>
+					<li><a href="/resume">resume</a></li>
+					<li><a href="/code-notes">code-notes</a></li>
+					<li><a href="/projects">projects</a></li>
+					<li><a href="/contact">contact</a></li>
+					-->
+				</ul>
+				<a id="login-button" href="/login" class="btn btn-inverse pull-right"> 
+					<i class="icon-off icon-white"></i>  Login
+				</a>
+			</div>
+		</div>
+		<div class="container-fluid">
+			<div class="row-fluid">
+				<div id="sidebar" class="span2">
+					<!--Sidebar content-->
+					<ul class="nav nav-tabs nav-stacked">
+						<li><a href="/private/blogadmin"><i class="icon-font icon-white"></i> edit</a></li>
+					</ul>
+				</div>
+				<div id="content" class="span10">
+					<!--Body content-->
+				</div>
+			</div>
+		</div>
+		<script src="http://code.jquery.com/jquery.js"></script>
+		<script src="http://localhost:3000/bootstrap/js/bootstrap.min.js"></script>
+	</body>
+</html>
