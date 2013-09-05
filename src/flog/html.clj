@@ -18,15 +18,15 @@
               :or {tag "div" attrs nil content nil}}] 
                 {:tag (keyword tag) :attrs attrs :content (fmt content)})
 
-(def login-form (html-snippet (slurp "/home/ethan/projects/flog/src/templates/login.html")))
+(def login-form (html-snippet (slurp "src/templates/login.html")))
 
-(def snips (html-snippet (slurp "/home/ethan/projects/flog/src/templates/snippets.html")))
+(def snips (html-snippet (slurp "src/templates/snippets.html")))
 
 (def login-button (select snips [:#login-button]))
 
 (def logout-button (select snips [:#logout-button]))
 
-(def templt (html-snippet (slurp "/home/ethan/projects/flog/src/templates/template.html")))
+(def templt (html-snippet (slurp "src/templates/template.html")))
 
 (def private-templt (at templt [:#login-button] (substitute logout-button)))
 
