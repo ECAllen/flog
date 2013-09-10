@@ -13,6 +13,7 @@
 
 ;; TODO replace this with edn
 (def user-file "src/flog/user.clj")
+
 (def users (ref (read-string (slurp user-file))))
 
 ;; ============================= 
@@ -44,6 +45,10 @@
 (defn login []
   (apply str (emit* login-page)))
 
+(defn blog []
+  (apply str (emit* blog-page)))
+
+
 ;; ======================
 ;; Routes
 ;; ======================
@@ -67,7 +72,7 @@
   ;; ======================
   ;; TODO make routes macro
   (GET "/" [] (index))
-  (GET "/blog" [] (index))
+  (GET "/blog" [] (blog))
   (GET "/login" [] (login))
   (route/files "")
   (route/not-found "404 baby"))
