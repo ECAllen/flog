@@ -33,6 +33,8 @@
 
 (defn lookup [usr] (@users usr))
 
+(defn authenticated? [req]
+  (if (friend/current-authentication req) true false))
 ;; ======================
 ;; page render
 ;; ======================
@@ -45,8 +47,9 @@
 (defn login []
   (apply str (emit* login-page)))
 
-(defn blog []
-  (apply str (emit* blog-page)))
+(defn blog [req]
+  ;; (apply str (emit* blog-page)))
+  (apply str (emit* (-> req authenticated? blog-page))))
 
 
 ;; ======================
@@ -72,7 +75,7 @@
   ;; ======================
   ;; TODO make routes macro
   (GET "/" [] (index))
-  (GET "/blog" [] (blog))
+  (GET "/blog" req (blog req))
   (GET "/login" [] (login))
   (route/files "")
   (route/not-found "404 baby"))

@@ -10,7 +10,6 @@
 
 (def blog-admin-page (at private-templt [:#content] (append blog-form)))
 
-
 (def ^:private db (get-database "blog-dev"))
 ; (def db (get-database "blog-dev"))
 
@@ -29,8 +28,9 @@
 (defn blog-posts []
   (for [post (get-posts)]
     (let [pst (:value post)]
-      (str "<p>" (:title pst) "</p>"
-           "<p>" (:md pst) "</p>"))))     
+      (tag :content (list  
+           (tag :tag "p" :content (:title pst))
+           (tag :tag "p" :content (:md pst)))))))
 
 (defn post-blog [title md timestamp]
   (with-db db 
@@ -44,4 +44,5 @@
 
 (defn delete-blog [db id])
 
-(def blog-page (at private-templt [:#content] (append blog-posts)))
+(defn blog-page [auth] 
+  (at (if auth private-templt templt) [:#content] (append (blog-posts))))
