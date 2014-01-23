@@ -9,7 +9,8 @@
             [compojure.response :as response]
             [cemerick.friend :as friend]
             (cemerick.friend [workflows :as workflows]
-                             [credentials :as creds])))
+                             [credentials :as creds]))
+  (:gen-class :main :true))
 
 ;; TODO replace this with edn
 (def user-file "src/flog/user.clj")
@@ -64,7 +65,7 @@
              (routes
                (GET "/blogadmin" [] (blog-admin)) 
                (POST "/add-blog-post" [md title]
-                     (post-blog title md (System/currentTimeMillis))
+                     (post-blog title md )
                      (ring.util.response/redirect "/private/blogadmin"))
 
                (friend/logout (ANY "/logout" request (ring.util.response/redirect "/"))))
@@ -86,6 +87,9 @@
                                 {:credential-fn (partial creds/bcrypt-credential-fn lookup)
                                  :workflows [(workflows/interactive-form)]})))
 
-;; site handler
-(defn flog [routedef]
-  (run-jetty routedef {:port 8080}))
+;; (defn flog [routedef]
+;;   (run-jetty routedef {:port 8080}))
+;; 
+;; 
+;; (defn -main [] 
+;;   (flog main-routes))
