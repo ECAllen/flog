@@ -26,8 +26,13 @@
 
 (def logout-button (select snips [:#logout-button]))
 
+(def add-blog-post-button (select snips [:#add-blog-post]))
+
 (def templt (html-snippet (slurp "src/templates/template.html")))
 
-(def private-templt (at templt [:#login-button] (substitute logout-button)))
+(def blog-templt (html-snippet (slurp "src/templates/template.html")))
+
+(def blog-private-templt (at blog-templt [:#login-button] (substitute logout-button)
+                                         [:#menu] (append add-blog-post-button )))
 
 (def login-page (at templt [:#content] (append login-form)))

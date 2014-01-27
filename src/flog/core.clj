@@ -49,7 +49,6 @@
   (apply str (emit* login-page)))
 
 (defn blog [req]
-  ;; (apply str (emit* blog-page)))
   (apply str (emit* (-> req authenticated? blog-page))))
 
 
@@ -74,8 +73,7 @@
   ;; ======================
   ;; unauthenticated routes
   ;; ======================
-  ;; TODO make routes macro
-  (GET "/" [] (index))
+  (GET "/" req (blog req))
   (GET "/blog" req (blog req))
   (GET "/login" [] (login))
   (route/files "")
@@ -87,9 +85,9 @@
                                 {:credential-fn (partial creds/bcrypt-credential-fn lookup)
                                  :workflows [(workflows/interactive-form)]})))
 
+
 ;; (defn flog [routedef]
 ;;   (run-jetty routedef {:port 8080}))
-;; 
 ;; 
 ;; (defn -main [] 
 ;;   (flog main-routes))

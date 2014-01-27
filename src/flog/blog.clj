@@ -6,10 +6,11 @@
 
 (def blog-snips (html-snippet (slurp "src/templates/blog.html")))
 (def blog-form (select blog-snips [:#blog-form]))
-(def blog-admin-page (at private-templt [:#content] (append blog-form)))
+(def blog-admin-page (at blog-private-templt [:#content] (append blog-form)))
 
 (def ^:private db (get-database "blog-dev"))
 
+;; create view in couchdb
 (defn define-views []
   (with-db db 
     (save-view "blog-posts"
@@ -34,7 +35,8 @@
   (for [post (get-posts)]
     (let [pst (:value post)]
       (tag :content (list  
-           (tag :tag "p" :content (:title pst))
+           (tag :tag "h3" :content (:title pst))
+           (tag :tag "h6" :content (:timestamp pst))
            (html-snippet (:html pst)))))))
 
 (defn update-blog [id])
@@ -42,4 +44,4 @@
 (defn delete-blog [id])
 
 (defn blog-page [auth] 
-  (at (if auth private-templt templt) [:#content] (append (blog-posts))))
+  (at (if auth blog-private-templt blog-templt) [:#content] (append (blog-posts))))
