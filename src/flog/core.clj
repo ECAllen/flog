@@ -36,6 +36,7 @@
 
 (defn authenticated? [req]
   (if (friend/current-authentication req) true false))
+
 ;; ======================
 ;; page render
 ;; ======================
@@ -50,7 +51,6 @@
 
 (defn blog [req]
   (apply str (emit* (-> req authenticated? blog-page))))
-
 
 ;; ======================
 ;; Routes
@@ -84,7 +84,6 @@
            (friend/authenticate main-routes
                                 {:credential-fn (partial creds/bcrypt-credential-fn lookup)
                                  :workflows [(workflows/interactive-form)]})))
-
 
 ;; (defn flog [routedef]
 ;;   (run-jetty routedef {:port 8080}))

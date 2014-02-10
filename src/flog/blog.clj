@@ -10,29 +10,33 @@
 
 (def ^:private db (get-database "blog-dev"))
 
-;; create view in couchdb
-(defn define-views []
+(defn create-views []
   (with-db db 
     (save-view "blog-posts"
-               (view-server-fns :cljs
-                                {:by-timestamp 
-                                 {:map (fn [doc] 
-                                         (js/emit (aget doc "timestamp") doc nil))}}))))
+               (view-server-fns :cljs 
+                                 {:by-timestamp {:map (fn [doc] (js/emit (aget doc "timestamp") doc nil))}
+                                  :unpublished {:map (fn [doc] 
+                                                       (if (aget doc "private") 
+                                                         (js/emit (aget doc "timestamp") doc nil)))}
+                                  :published {:map (fn [doc] 
+                                                       (if (false? (aget doc "private")) 
+                                                         (js/emit (aget doc "timestamp") doc nil)))}}))))
 
 (defn post-blog [title md]
-  (with-db db 
+  (with-db db
     (put-document {:title title
                    :md md
                    :html (md-to-html-string md) 
                    :pdf ""
+                   :private true
                    :timestamp (System/currentTimeMillis)})))
 
-(defn get-posts []
+(defn get-posts [level]
   (with-db db 
-    (get-view "blog-posts" "by-timestamp" {:descending true})))
+    (get-view "blog-posts" level {:descending true})))
 
-(defn blog-posts []
-  (for [post (get-posts)]
+(defn blog-posts [level]
+  (for [post (get-posts level)]
     (let [pst (:value post)]
       (tag :content (list  
            (tag :tag "h3" :content (:title pst))
@@ -44,4 +48,7 @@
 (defn delete-blog [id])
 
 (defn blog-page [auth] 
-  (at (if auth blog-private-templt blog-templt) [:#content] (append (blog-posts))))
+  ;; (at (if auth blog-private-templt blog-templt) [:#content] (append (blog-posts))))
+  (if auth (at blog-private-templt [:#content] (append (blog-posts "by-timestamp")))
+           (at blog-templt [:#content] (append (blog-posts "published")))))
+
